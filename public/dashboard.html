@@ -134,7 +134,7 @@
 
         async function salvarMesas() {
             const val = document.getElementById('input-total-mesas').value;
-            await fetch('/api/configs/mesas', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({total_mesas: val}) });
+            await fetch('http://localhost:3000/api/configs/mesas', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({total_mesas: val}) });
             alert("Configuração de mesas atualizada!");
         }
 
@@ -161,7 +161,7 @@
             const stock = parseInt(document.getElementById('p-stock').value);
             if(!name || !price) return alert("Preencha os campos!");
 
-            await fetch('/api/products', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({name, price, stock}) });
+            await fetch('http://localhost:3000/api/products', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({name, price, stock}) });
             document.getElementById('p-name').value = ''; document.getElementById('p-price').value = ''; document.getElementById('p-stock').value = '';
             carregarProdutos();
         }
