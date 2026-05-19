@@ -120,11 +120,19 @@
             const password = document.getElementById('password').value;
 
             try {
-                const res = await fetch('/api/login', {
+                // SE O SEU BACKEND FOR NODE.JS (Exemplo na porta 3000):
+                const resposta = await fetch('http://localhost:3000/api/login', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, senha }) // ou os dados do seu formulário
                 });
+                //const res = await fetch('/api/login', {
+                    //method: 'POST',
+                    //headers: { 'Content-Type': 'application/json' },
+                    //body: JSON.stringify({ email, password })
+                //}); rota atual 
 
                 const dados = await res.json();
 
