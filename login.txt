@@ -45,7 +45,7 @@
     }
 
     /* Títulos e textos dentro do card para garantir leitura */
-    .login-card h2, .login-card p, .login-card label {
+    .login-card h1, .login-card h2, .login-card h3, .login-card label {
         color: #f8fafc !important;
     }
 
@@ -88,21 +88,23 @@
         box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.15);
     }
 </style>
+
+
 </head>
 <body>
 
     <div class="login-card text-center">
-        <h2 class="fw-bold mb-2">☕ Grão & Aroma</h2>
-        <p class="small mb-4" style="opacity: 0.8;">Painel de Controle da Cafeteria</p>
+        <h2 class="fw-bold text-dark mb-2">☕ CAFETERIA LUGAR</h2>
+        <p class="text-secondary small mb-4">Painel de Controle da Cafeteria</p>
 
         <form id="form-login" onsubmit="executarLogin(event)">
             <div class="mb-3 text-start">
-                <label for="email" class="form-label fw-bold small">E-mail Corporativo</label>
+                <label for="email" class="form-label text-dark fw-bold small">E-mail Corporativo</label>
                 <input type="email" id="email" class="form-control" placeholder="seuemail@cafeteria.com" required>
             </div>
             
             <div class="mb-4 text-start">
-                <label for="password" class="form-label fw-bold small">Senha</label>
+                <label for="password" class="form-label text-dark fw-bold small">Senha</label>
                 <input type="password" id="password" class="form-control" placeholder="••••••••" required>
             </div>
 
@@ -111,27 +113,26 @@
     </div>
 
     <script>
-        async function ejecutarLogin(event) {
-            // Mantendo o mapeamento correto caso o HTML chame "executarLogin" ou "ejecutarLogin"
-            await executarLogin(event);
-        }
-
+        // Alterado o nome da função de "ejecutarLogin" para "executarLogin" para bater com o form
         async function executarLogin(event) {
             event.preventDefault();
-            
             const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value; // Captura a variável correta
+            const password = document.getElementById('password').value;
 
             try {
-                // Rota relativa dinâmica para funcionar independente de onde o front está hospedado (se configurado com proxy)
-                // Se o seu backend estiver em outra URL/Porta fixa, mude '/api/login' para 'http://localhost:3000/api/login'
-                const res = await fetch('/api/login', {
+                // SE O SEU BACKEND FOR NODE.JS (Exemplo na porta 3000):
+                const resposta = await fetch('http://localhost:3000/api/login', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json' 
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, password }) // Corrigido de "senha" para "password"
+                    body: JSON.stringify({ email, senha }) // ou os dados do seu formulário
                 });
+                //const res = await fetch('/api/login', {
+                    //method: 'POST',
+                    //headers: { 'Content-Type': 'application/json' },
+                    //body: JSON.stringify({ email, password })
+                //}); rota atual 
 
                 const dados = await res.json();
 
@@ -140,14 +141,11 @@
                     return;
                 }
 
-                // Salva os dados retornados no localStorage
                 localStorage.setItem('token', dados.token);
                 localStorage.setItem('role', dados.role);
                 localStorage.setItem('name', dados.name);
                 
-                // Redireciona para o painel principal
                 location.href = 'dashboard.html';
-                
             } catch (error) {
                 console.error("Erro na requisição de login:", error);
                 alert("Não foi possível conectar ao servidor.");
