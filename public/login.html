@@ -125,7 +125,7 @@
             try {
                 // Rota relativa dinâmica para funcionar independente de onde o front está hospedado (se configurado com proxy)
                 // Se o seu backend estiver em outra URL/Porta fixa, mude '/api/login' para 'http://localhost:3000/api/login'
-                const res = await fetch('/api/login', {
+                const res = await fetch('http://localhost:3000/api/login', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json' 
