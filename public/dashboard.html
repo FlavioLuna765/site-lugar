@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Cafeteria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #ffffff; color: #1a202c; font-family: sans-serif; padding: 25px; }
+        .card-custom { background-color: #faf8f5; border: 2px solid #e8e2da; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .border-coffee { border-color: #6f4e37 !important; }
+        .text-custom-dark { color: #4a3221 !important; font-weight: bold; }
+        
+        @media print { 
+            body { background: #ffffff !important; color: #000000 !important; padding: 0 !important; margin: 0 !important; }
+            .no-print { display: none !important; } 
+            
+            #area-relatorio { 
+                display: block !important; 
+                visibility: visible !important;
+                border: none !important; 
+                background: #ffffff !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                box-shadow: none !important;
+            }
+            .table { color: #000000 !important; background-color: #ffffff !important; width: 100% !important; }
+            .table th { background-color: #f1f5f9 !important; color: #000000 !important; border-bottom: 2px solid #000000 !important; }
+            .table td { border-bottom: 1px solid #cbd5e1 !important; color: #000000 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+            <h2 class="text-dark fw-bold">☕ GESTÃO ADM - CAFETERIA LUGAR</h2>
+            <button class="btn btn-sm btn-outline-danger fw-bold" onclick="localStorage.clear(); location.href='login.html'">Sair do Sistema</button>
+        </div>
+
+        <div class="card-custom no-print border-coffee">
+            <h5 class="text-custom-dark mb-3">🔗 Atalhos Rápidos Operacionais</h5>
+            <div class="row g-2">
+                <div class="col-md-4"><a href="comanda.html" target="_blank" class="btn btn-outline-dark w-100 fw-bold">☕ Mapa de Mesas</a></div>
+                <div class="col-md-4"><a href="cardapio.html?mesa=1&cliente=ADM" target="_blank" class="btn btn-outline-secondary w-100 fw-bold">🍰 Visualizar Cardápio</a></div>
+                <div class="col-md-4"><a href="balcao.html" target="_blank" class="btn btn-outline-success w-100 fw-bold">📋 Tela de Pedidos (Balcão)</a></div>
+            </div>
+        </div>
+
+        <div class="row no-print">
+            <div class="col-md-4">
+                <div class="card-custom">
+                    <h5 class="text-custom-dark">📊 Limite de Mesas / Atendimentos</h5>
+                    <div class="input-group my-3">
+                        <input type="number" id="input-total-mesas" class="form-control bg-white text-dark border-secondary fw-bold">
+                        <button class="btn btn-dark fw-bold" onclick="salvarMesas()">Salvar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card-custom">
+                    <h5 class="text-custom-dark">📅 Relatórios de Faturamento da Cafeteria</h5>
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        <button class="btn btn-sm btn-light border-secondary fw-bold text-dark" onclick="carregarRelatorio('diario')">Diário</button>
+                        <button class="btn btn-sm btn-light border-secondary fw-bold text-dark" onclick="carregarRelatorio('semanal')">Semanal</button>
+                        <button class="btn btn-sm btn-light border-secondary fw-bold text-dark" onclick="carregarRelatorio('quinzenal')">Quinzenal</button>
+                        <button class="btn btn-sm btn-light border-secondary fw-bold text-dark" onclick="carregarRelatorio('mensal')">Mensal</button>
+                        <button class="btn btn-sm btn-brown text-white ms-auto fw-bold" style="background-color: #6f4e37;" id="btn-pdf" style="display:none;" onclick="window.print()">📄 Imprimir PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-custom no-print border-coffee">
+            <h5 class="text-custom-dark mb-3">🍩 Cadastro de Itens & Controle de Estoque (Cafeteria)</h5>
+            <div class="row g-2 mb-4">
+                <div class="col-md-4"><input type="text" id="p-name" class="form-control bg-white text-dark border-secondary" placeholder="Nome do Item (Ex: Capuccino Italiano 300ml)"></div>
+                <div class="col-md-3"><input type="number" step="0.01" id="p-price" class="form-control bg-white text-dark border-secondary" placeholder="Preço Unitário (R$)"></div>
+                <div class="col-md-3"><input type="number" id="p-stock" class="form-control bg-white text-dark border-secondary" placeholder="Estoque Inicial"></div>
+                <div class="col-md-2"><button class="btn btn-success w-100 fw-bold" onclick="salvarProduto()">Cadastrar</button></div>
+            </div>
+            <table class="table table-bordered table-striped align-middle small text-dark">
+                <thead class="table-dark"><tr><th>ID</th><th>Produto / Grão / Doce</th><th>Preço</th><th>Estoque Atual</th><th>Ações</th></tr></thead>
+                <tbody id="tabela-produtos"></tbody>
+            </table>
+        </div>
+
+        <div id="area-relatorio" class="card-custom mt-2" style="display: none;">
+            <div class="text-center border-bottom pb-2 mb-3">
+                <h3 class="text-dark fw-bold" id="titulo-relatorio">RELATÓRIO</h3>
+            </div>
+            <div class="row text-center mb-3">
+                <div class="col-6">
+                    <div class="p-2 bg-light border rounded text-dark">
+                        <small>Atendimentos Concluídos:</small> 
+                        <strong class="h4 d-block text-danger fw-bold" id="lbl-qtd-vendas">0</strong>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 bg-light border rounded text-dark">
+                        <small>Faturamento Total (+10%):</small> 
+                        <strong class="h4 d-block text-success fw-bold" id="lbl-faturamento">R$ 0,00</strong>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-bordered table-striped small text-dark">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Mesa/Balcão</th>
+                        <th>Cliente</th>
+                        <th>Consumo</th>
+                        <th>Total Pago</th>
+                    </tr>
+                </thead>
+                <tbody id="dados-relatorio"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) location.href = 'login.html';
+
+        async function init() {
+            try {
+                const resMesas = await fetch('/api/configs/mesas', { headers: { 'Authorization': `Bearer ${token}` } });
+                const dMesas = await resMesas.json();
+                document.getElementById('input-total-mesas').value = dMesas.total_mesas;
+                carregarProdutos();
+            } catch(e){}
+        }
+
+        async function salvarMesas() {
+            const val = document.getElementById('input-total-mesas').value;
+            await fetch('/api/configs/mesas', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({total_mesas: val}) });
+            alert("Configuração de mesas atualizada!");
+        }
+
+        async function carregarProdutos() {
+            const res = await fetch('/api/products', { headers:{'Authorization':`Bearer ${token}`} });
+            const produtos = await res.json();
+            document.getElementById('tabela-produtos').innerHTML = produtos.map(p => `
+                <tr>
+                    <td>#${p.id}</td>
+                    <td><input type="text" id="edit-name-${p.id}" value="${p.name}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary"></td>
+                    <td><input type="number" step="0.01" id="edit-price-${p.id}" value="${p.price}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary" style="width:90px;"></td>
+                    <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary" style="width:80px;"></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="atualizarProduto(${p.id})">💾</button>
+                        <button class="btn btn-sm btn-danger" onclick="deletarProduto(${p.id})">🗑️</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function salvarProduto() {
+            const name = document.getElementById('p-name').value;
+            const price = parseFloat(document.getElementById('p-price').value);
+            const stock = parseInt(document.getElementById('p-stock').value);
+            if(!name || !price) return alert("Preencha os campos!");
+
+            await fetch('/api/products', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({name, price, stock}) });
+            document.getElementById('p-name').value = ''; document.getElementById('p-price').value = ''; document.getElementById('p-stock').value = '';
+            carregarProdutos();
+        }
+
+        async function actualizarProduto(id) {
+            const name = document.getElementById(`edit-name-${id}`).value;
+            const price = parseFloat(document.getElementById(`edit-price-${id}`).value);
+            const stock = parseInt(document.getElementById(`edit-stock-${id}`).value);
+            await fetch(`/api/products/${id}`, { method:'PUT', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({name, price, stock}) });
+            alert("Item atualizado no sistema!");
+            carregarProdutos();
+        }
+
+        async function deletarProduto(id) {
+            if(confirm("Deseja mesmo remover este item do cardápio?")) {
+                await fetch(`/api/products/${id}`, { method:'DELETE', headers:{'Authorization':`Bearer ${token}`} });
+                carregarProdutos();
+            }
+        }
+
+        async function carregarRelatorio(periodo) {
+            try {
+                const res = await fetch(`/api/reports/sales?periodo=${periodo}`, { 
+                    headers: { 'Authorization': `Bearer ${token}` } 
+                });
+                
+                if (!res.ok) {
+                    alert("Erro ao buscar dados do servidor.");
+                    return;
+                }
+
+                const dados = await res.json();
+                document.getElementById('titulo-relatorio').innerText = `RELATÓRIO DE VENDAS - ${periodo.toUpperCase()}`;
+                
+                const areaRelatorio = document.getElementById('area-relatorio');
+                areaRelatorio.style.display = 'block';
+                document.getElementById('btn-pdf').style.display = 'block';
+
+                const listaVendas = Array.isArray(dados) ? dados : [];
+                let total = 0;
+                const tabela = document.getElementById('dados-relatorio');
+                
+                if (listaVendas.length === 0) {
+                    tabela.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Nenhum registro finalizado encontrado para este período.</td></tr>`;
+                    document.getElementById('lbl-qtd-vendas').innerText = "0";
+                    document.getElementById('lbl-faturamento').innerText = "R$ 0,00";
+                    return;
+                }
+
+                tabela.innerHTML = listaVendas.map(v => {
+                    const valorTotal = typeof v.total === 'number' ? v.total : parseFloat(v.total || 0);
+                    total += valorTotal;
+
+                    let textoItens = "";
+                    if (Array.isArray(v.itens)) {
+                        textoItens = v.itens.map(i => `${i.qtd}x ${i.name}`).join(', ');
+                    } else {
+                        textoItens = "Itens não identificados";
+                    }
+
+                    return `
+                        <tr>
+                            <td>#${v.id}</td>
+                            <td>Mesa ${v.mesa}</td>
+                            <td>${v.cliente || 'Cliente Anônimo'}</td>
+                            <td>${textoItens}</td>
+                            <td class="text-success fw-bold">R$ ${valorTotal.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                document.getElementById('lbl-qtd-vendas').innerText = listaVendas.length;
+                document.getElementById('lbl-faturamento').innerText = `R$ ${total.toFixed(2)}`;
+
+            } catch (error) {
+                console.error("Erro no processamento do relatório:", error);
+                alert("Ocorreu um erro ao renderizar o relatório.");
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

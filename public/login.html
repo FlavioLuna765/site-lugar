@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Grão & Aroma Cafeteria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+    /* Fundo com imagem de cafeteria moderna e minimalista */
+    body { 
+        background: url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed; 
+        background-size: cover;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        position: relative;
+    }
+
+    /* Overlay escuro elegante para dar foco ao card de login e suavizar o fundo */
+    body::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.75); /* Tom de azul escuro/grafite */
+        z-index: 1;
+    }
+
+    /* Caixa de login Premium Glassmorphism Escuro */
+    .login-card {
+        position: relative;
+        z-index: 2;
+        background: rgba(30, 41, 59, 0.7); /* Slate escuro translúcido */
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(245, 158, 11, 0.2); /* Borda fina em tom âmbar suave */
+        border-radius: 24px; /* Cantos mais arredondados e modernos */
+        padding: 40px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Títulos e textos dentro do card para garantir leitura */
+    .login-card h1, .login-card h2, .login-card h3, .login-card label {
+        color: #f8fafc !important;
+    }
+
+    /* Botão Amarelo Moderno (Sem ser brilhante demais) */
+    .btn-coffee {
+        background-color: #f59e0b; /* Amarelo Âmbar Premium */
+        color: #0f172a; /* Texto escuro para alto contraste */
+        font-weight: 600;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+
+    .btn-coffee:hover {
+        background-color: #d97706; /* Amarelo um pouco mais quente no hover */
+        color: #0f172a;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    /* Inputs elegantes que combinam com o modo escuro */
+    .form-control {
+        background-color: rgba(15, 23, 42, 0.6) !important;
+        color: #f1f5f9 !important;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        border-radius: 12px;
+        padding: 12px;
+    }
+
+    .form-control::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    /* Foco do Input mudando para a cor tema amarela */
+    .form-control:focus {
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.15);
+    }
+</style>
+
+
+</head>
+<body>
+
+    <div class="login-card text-center">
+        <h2 class="fw-bold text-dark mb-2">☕ CAFETERIA LUGAR</h2>
+        <p class="text-secondary small mb-4">Painel de Controle da Cafeteria</p>
+
+        <form id="form-login" onsubmit="executarLogin(event)">
+            <div class="mb-3 text-start">
+                <label for="email" class="form-label text-dark fw-bold small">E-mail Corporativo</label>
+                <input type="email" id="email" class="form-control" placeholder="seuemail@cafeteria.com" required>
+            </div>
+            
+            <div class="mb-4 text-start">
+                <label for="password" class="form-label text-dark fw-bold small">Senha</label>
+                <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn btn-coffee w-100 py-2 mb-2">Entrar no Sistema ⚡</button>
+        </form>
+    </div>
+
+    <script>
+        // Alterado o nome da função de "ejecutarLogin" para "executarLogin" para bater com o form
+        async function executarLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const dados = await res.json();
+
+                if (!res.ok) {
+                    alert(dados.error || "Erro ao fazer login.");
+                    return;
+                }
+
+                localStorage.setItem('token', dados.token);
+                localStorage.setItem('role', dados.role);
+                localStorage.setItem('name', dados.name);
+                
+                location.href = 'dashboard.html';
+            } catch (error) {
+                console.error("Erro na requisição de login:", error);
+                alert("Não foi possível conectar ao servidor.");
+            }
+        }
+    </script>
+</body>
+</html>

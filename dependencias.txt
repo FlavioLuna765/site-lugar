@@ -1,0 +1,39 @@
+cafeteria-backend/
+├── node_modules/
+├── public/                 <-- COLOCA OS TEUS HTMLs AQUI
+│   ├── login.html
+│   ├── cadastro.html
+│   ├── comanda.html
+│   ├── cardapio.html
+│   ├── balcao.html
+│   └── dashboard.html
+├── .env                    <-- Configurações secretas
+├── database.sqlite         <-- Criado automaticamente pelo banco
+├── package.json
+└── server.js               <-- Ficheiro principal do backend
+
+# 1. Iniciar o projeto Node.js (cria o package.json)
+npm init -y
+
+# 2. Instalar as dependências necessárias para a API e Segurança
+npm install express cors dotenv jsonwebtoken bcryptjs sqlite3
+
+O que faz cada um destes pacotes?
+
+express: O framework para criar as rotas da API (/api/orders, etc.) e servir os teus HTMLs estáticos.
+
+cors: Permite que o teu frontend comunique com o backend sem bloqueios de segurança do navegador.
+
+dotenv: Para guardares chaves secretas (como o segredo do JWT) num ficheiro .env seguro.
+
+jsonwebtoken (JWT): Cria os tokens de acesso quando o utilizador faz login (armazenados no teu localStorage).
+
+bcryptjs: Para encriptar as palavras-passe dos utilizadores no banco de dados com segurança.
+
+sqlite3: O banco de dados relacional leve (em ficheiro) para persistir os produtos, utilizadores e comandas sem precisares de instalar um servidor de banco de dados pesado ao início.
+
+npm install --save-dev nodemon
+
+"scripts": {
+  "dev": "nodemon server.js"
+}
