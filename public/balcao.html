@@ -20,7 +20,7 @@
 
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light">
-            <h2 class="text-dark fw-bold">☕ MONITOR DE PEDIDOS - LUGAR</h2>
+            <h2 class="text-dark fw-bold">☕ MONITOR DE PEDIDOS - BALCÃO</h2>
             <button class="btn btn-sm btn-outline-dark fw-bold" onclick="location.href='dashboard.html'">Painel ADM</button>
         </div>
         <div id="lista-pedidos-ativos" class="grid-layout"></div>
@@ -30,13 +30,16 @@
         const token = localStorage.getItem('token');
         if (!token) location.href = 'login.html';
 
+        // CONFIGURAÇÃO CENTRAL DA URL DO SEU BACKEND LOCAL
+        const API_BASE = 'http://localhost:3000';
+
         async function carregarBalcao() {
             try {
-                const res = await fetch('/api/orders/active', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_BASE}/api/orders/active`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const pedidos = await res.json();
                 const container = document.getElementById('lista-pedidos-ativos');
                 
-                if(pedidos.length === 0) {
+                if(!pedidos || pedidos.length === 0) {
                     container.innerHTML = '<p class="text-muted text-center col-12 my-5 h5">☕ Nenhuma comanda ou mesa ativa no momento.</p>';
                     return;
                 }
@@ -71,18 +74,30 @@
                         </div>
                     `;
                 }).join('');
-            } catch (e) { }
+            } catch (e) { 
+                console.error("Erro ao atualizar o monitor de pedidos:", e);
+            }
         }
 
         async function mudarStatus(id, novoStatus) {
-            await fetch(`/api/orders/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ status: novoStatus })
-            });
-            carregarBalcao();
+            try {
+                const res = await fetch(`${API_BASE}/api/orders/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status: novoStatus })
+                });
+                
+                if (res.ok) {
+                    carregarBalcao();
+                } else {
+                    alert("Erro ao atualizar o status da comanda.");
+                }
+            } catch (err) {
+                console.error("Erro ao enviar alteração de status:", err);
+            }
         }
 
+        // Mantém a atualização em tempo real a cada 4 segundos
         setInterval(carregarBalcao, 4000);
         carregarBalcao();
     </script>

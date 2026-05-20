@@ -66,7 +66,7 @@
                         <button class="btn btn-sm btn-light border-secondary fw-bold text-dark" onclick="carregarRelatorio('semanal')">Semanal</button>
                         <button class="btn btn-sm btn-light border-secondary fw-bold text-dark" onclick="carregarRelatorio('quinzenal')">Quinzenal</button>
                         <button class="btn btn-sm btn-light border-secondary fw-bold text-dark" onclick="carregarRelatorio('mensal')">Mensal</button>
-                        <button class="btn btn-sm btn-brown text-white ms-auto fw-bold" style="background-color: #6f4e37;" id="btn-pdf" style="display:none;" onclick="window.print()">📄 Imprimir PDF</button>
+                        <button class="btn btn-sm btn-brown text-white ms-auto fw-bold" style="background-color: #6f4e37; display:none;" id="btn-pdf" onclick="window.print()">📄 Imprimir PDF</button>
                     </div>
                 </div>
             </div>
@@ -123,68 +123,111 @@
         const token = localStorage.getItem('token');
         if (!token) location.href = 'login.html';
 
+        // CONFIGURAÇÃO CENTRAL DA URL DO SEU BACKEND LOCAL
+        const API_BASE = 'http://localhost:3000';
+
         async function init() {
             try {
-                const resMesas = await fetch('/api/configs/mesas', { headers: { 'Authorization': `Bearer ${token}` } });
+                const resMesas = await fetch(`${API_BASE}/api/configs/mesas`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const dMesas = await resMesas.json();
                 document.getElementById('input-total-mesas').value = dMesas.total_mesas;
                 carregarProdutos();
-            } catch(e){}
+            } catch(e){
+                console.error("Erro ao inicializar dados:", e);
+            }
         }
 
         async function salvarMesas() {
             const val = document.getElementById('input-total-mesas').value;
-            await fetch('http://localhost:3000/api/configs/mesas', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({total_mesas: val}) });
-            alert("Configuração de mesas atualizada!");
+            try {
+                await fetch(`${API_BASE}/api/configs/mesas`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                    body: JSON.stringify({ total_mesas: val }) 
+                });
+                alert("Configuração de mesas atualizada!");
+            } catch(e) {
+                alert("Erro ao salvar configuração de mesas.");
+            }
         }
 
         async function carregarProdutos() {
-            const res = await fetch('/api/products', { headers:{'Authorization':`Bearer ${token}`} });
-            const produtos = await res.json();
-            document.getElementById('tabela-produtos').innerHTML = produtos.map(p => `
-                <tr>
-                    <td>#${p.id}</td>
-                    <td><input type="text" id="edit-name-${p.id}" value="${p.name}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary"></td>
-                    <td><input type="number" step="0.01" id="edit-price-${p.id}" value="${p.price}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary" style="width:90px;"></td>
-                    <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary" style="width:80px;"></td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="atualizarProduto(${p.id})">💾</button>
-                        <button class="btn btn-sm btn-danger" onclick="deletarProduto(${p.id})">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
+            try {
+                const res = await fetch(`${API_BASE}/api/products`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const produtos = await res.json();
+                document.getElementById('tabela-produtos').innerHTML = produtos.map(p => `
+                    <tr>
+                        <td>#${p.id}</td>
+                        <td><input type="text" id="edit-name-${p.id}" value="${p.name}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary"></td>
+                        <td><input type="number" step="0.01" id="edit-price-${p.id}" value="${p.price}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary" style="width:90px;"></td>
+                        <td><input type="number" id="edit-stock-${p.id}" value="${p.stock}" class="form-control form-control-sm bg-white text-dark border-1 border-secondary" style="width:80px;"></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="actualizarProduto(${p.id})">💾</button>
+                            <button class="btn btn-sm btn-danger" onclick="deletarProduto(${p.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error("Erro ao carregar produtos:", e);
+            }
         }
 
         async function salvarProduto() {
             const name = document.getElementById('p-name').value;
             const price = parseFloat(document.getElementById('p-price').value);
-            const stock = parseInt(document.getElementById('p-stock').value);
+            const stock = parseInt(document.getElementById('p-stock').value) || 0;
             if(!name || !price) return alert("Preencha os campos!");
 
-            await fetch('http://localhost:3000/api/products', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({name, price, stock}) });
-            document.getElementById('p-name').value = ''; document.getElementById('p-price').value = ''; document.getElementById('p-stock').value = '';
-            carregarProdutos();
+            try {
+                await fetch(`${API_BASE}/api/products`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                    body: JSON.stringify({ name, price, stock }) 
+                });
+                document.getElementById('p-name').value = ''; 
+                document.getElementById('p-price').value = ''; 
+                document.getElementById('p-stock').value = '';
+                carregarProdutos();
+            } catch(e) {
+                alert("Erro ao cadastrar produto.");
+            }
         }
 
         async function actualizarProduto(id) {
             const name = document.getElementById(`edit-name-${id}`).value;
             const price = parseFloat(document.getElementById(`edit-price-${id}`).value);
-            const stock = parseInt(document.getElementById(`edit-stock-${id}`).value);
-            await fetch(`/api/products/${id}`, { method:'PUT', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({name, price, stock}) });
-            alert("Item atualizado no sistema!");
-            carregarProdutos();
+            const stock = parseInt(document.getElementById(`edit-stock-${id}`).value) || 0;
+            
+            try {
+                await fetch(`${API_BASE}/api/products/${id}`, { 
+                    method: 'PUT', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                    body: JSON.stringify({ name, price, stock }) 
+                });
+                alert("Item atualizado no sistema!");
+                carregarProdutos();
+            } catch(e) {
+                alert("Erro ao atualizar produto.");
+            }
         }
 
         async function deletarProduto(id) {
             if(confirm("Deseja mesmo remover este item do cardápio?")) {
-                await fetch(`/api/products/${id}`, { method:'DELETE', headers:{'Authorization':`Bearer ${token}`} });
-                carregarProdutos();
+                try {
+                    await fetch(`${API_BASE}/api/products/${id}`, { 
+                        method: 'DELETE', 
+                        headers: { 'Authorization': `Bearer ${token}` } 
+                    });
+                    carregarProdutos();
+                } catch(e) {
+                    alert("Erro ao deletar produto.");
+                }
             }
         }
 
         async function carregarRelatorio(periodo) {
             try {
-                const res = await fetch(`/api/reports/sales?periodo=${periodo}`, { 
+                const res = await fetch(`${API_BASE}/api/reports/sales?periodo=${periodo}`, { 
                     headers: { 'Authorization': `Bearer ${token}` } 
                 });
                 

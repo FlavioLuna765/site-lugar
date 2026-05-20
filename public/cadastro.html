@@ -51,6 +51,9 @@
         </div>
     </div>
     <script>
+        // CONFIGURAÇÃO CENTRAL DA URL DO SEU BACKEND LOCAL
+        const API_BASE = 'http://localhost:3000';
+
         document.getElementById('form-cadastro').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('cad-name').value;
@@ -59,19 +62,24 @@
             const role = document.getElementById('cad-role').value;
 
             try {
-                const res = await fetch('/api/register', {
+                const res = await fetch(`${API_BASE}/api/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, password, role })
                 });
+                
                 const data = await res.json();
+                
                 if(res.ok) {
                     alert("Usuário registrado com sucesso!");
                     window.location.href = 'login.html';
                 } else {
                     alert(data.error || "Erro no cadastro.");
                 }
-            } catch(err) { alert("Erro de rede."); }
+            } catch(err) { 
+                console.error("Erro de rede:", err);
+                alert("Erro de rede ao tentar conectar ao servidor."); 
+            }
         });
     </script>
 </body>

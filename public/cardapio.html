@@ -75,6 +75,9 @@
         const mesaAtiva = parseInt(urlParams.get('mesa'));
         const clienteAtivoNome = urlParams.get('cliente');
 
+        // CONFIGURAÇÃO CENTRAL DA URL DO SEU BACKEND LOCAL
+        const API_BASE = 'http://localhost:3000';
+
         let sacola = { mesa: mesaAtiva, cliente: clienteAtivoNome, itens: [], tipoNota: "" };
         let produtos = [];
 
@@ -82,10 +85,10 @@
             document.getElementById('info-mesa').innerText = `Mesa ${mesaAtiva} • ${clienteAtivoNome}`;
             
             try {
-                const resExtrato = await fetch(`/api/orders/mesa/${mesaAtiva}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const resExtrato = await fetch(`${API_BASE}/api/orders/mesa/${mesaAtiva}`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const dadosMesa = await resExtrato.json();
                 
-                if(dadosMesa && dadosMesa.itens.length > 0) {
+                if(dadosMesa && dadosMesa.itens && dadosMesa.itens.length > 0) {
                     document.getElementById('extrato-mesa').innerHTML = dadosMesa.itens.map(i => `
                         <div class="d-flex justify-content-between">
                             <span>${i.qtd}x ${i.name}</span>
@@ -105,10 +108,12 @@
                     document.getElementById('extrato-mesa').innerText = "Nenhum consumo registrado nesta mesa.";
                     document.getElementById('valores-extrato').style.display = 'none';
                 }
-            } catch(e) { console.warn("Erro extrato:", e); }
+            } catch(e) { 
+                console.warn("Erro ao buscar extrato da mesa:", e); 
+            }
 
             try {
-                const res = await fetch('/api/products', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_BASE}/api/products`, { headers: { 'Authorization': `Bearer ${token}` } });
                 produtos = await res.json();
                 document.getElementById('lista-produtos').innerHTML = produtos.map(p => `
                     <div class="d-flex justify-content-between align-items-center item-row">
@@ -119,7 +124,9 @@
                             <button class="btn-qty" onclick="ajustarItem(${p.id}, 1)">+</button>
                         </div>
                     </div>`).join('');
-            } catch (error) { }
+            } catch (error) {
+                console.error("Erro ao carregar lista de produtos:", error);
+            }
         }
 
         function ajustarItem(id, mod) {
@@ -145,7 +152,7 @@
             const totalEnvio = sacola.itens.reduce((acc, i) => acc + (i.price * i.qtd), 0) * 1.10;
 
             try {
-                const res = await fetch('/api/orders', {
+                const res = await fetch(`${API_BASE}/api/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ mesa: sacola.mesa, cliente: sacola.cliente, itens: sacola.itens, total: totalEnvio, status: 'producao' })
@@ -154,8 +161,12 @@
                     alert("Pedido enviado para a copa/baristas!");
                     sacola.itens = [];
                     initCardapio();
+                } else {
+                    alert("Erro ao enviar o pedido para o servidor.");
                 }
-            } catch (error) { }
+            } catch (error) {
+                console.error("Erro na requisição do pedido:", error);
+            }
         }
 
         function mostrarOpcoesNota() { document.getElementById('view-cardapio').style.display = 'none'; document.getElementById('view-nota').style.display = 'block'; }
@@ -181,13 +192,20 @@
 
         async function enviarFechamento(contato) {
             try {
-                const res = await fetch(`/api/orders/status-mesa/${sacola.mesa}`, {
+                const res = await fetch(`${API_BASE}/api/orders/status-mesa/${sacola.mesa}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ status: 'pagamento', nota: sacola.tipoNota, contato: contato })
                 });
-                if (res.ok) { alert("Conta solicitada com sucesso!"); window.location.href = 'comanda.html'; }
-            } catch (e) { }
+                if (res.ok) { 
+                    alert("Conta solicitada com sucesso!"); 
+                    window.location.href = 'comanda.html'; 
+                } else {
+                    alert("Erro ao solicitar fechamento da mesa.");
+                }
+            } catch (e) {
+                console.error("Erro ao fechar mesa:", e);
+            }
         }
 
         initCardapio();
